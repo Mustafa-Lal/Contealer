@@ -1,0 +1,441 @@
+:root {
+    --bg: #0b0d10;
+    --surface: #14171b;
+    --surface-raised: #191d22;
+    --border: #262b31;
+    --border-light: #32383f;
+
+    --text: #e8eaed;
+    --text-dim: #9aa1a9;
+    --text-faint: #666e77;
+
+    --accent: #4f7cff;
+    --accent-hover: #6389ff;
+    --accent-text: #ffffff;
+
+    --danger: #ef5350;
+    --danger-bg: #2a1516;
+    --danger-border: #4a2224;
+
+    --radius: 10px;
+    --radius-lg: 14px;
+
+    --font: -apple-system, BlinkMacSystemFont, "Segoe UI", "Inter", Roboto, Helvetica, Arial, sans-serif;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+html, body {
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 15px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+}
+
+.page {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 0 24px 80px;
+}
+
+/* ---------------- Header ---------------- */
+
+.app-header {
+    padding: 48px 0 32px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 40px;
+}
+
+.brand {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.brand-logo {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--text);
+}
+
+.brand-subtitle {
+    font-size: 14px;
+    color: var(--text-dim);
+}
+
+/* ---------------- Process section ---------------- */
+
+.process-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 24px;
+}
+
+.url-row {
+    display: flex;
+    gap: 12px;
+}
+
+.url-input {
+    flex: 1;
+    background: var(--surface-raised);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius);
+    color: var(--text);
+    font-size: 15px;
+    padding: 14px 16px;
+    outline: none;
+    transition: border-color 0.15s ease;
+}
+
+.url-input::placeholder {
+    color: var(--text-faint);
+}
+
+.url-input:focus {
+    border-color: var(--accent);
+}
+
+.btn-primary {
+    background: var(--accent);
+    color: var(--accent-text);
+    border: none;
+    border-radius: var(--radius);
+    font-size: 15px;
+    font-weight: 600;
+    padding: 14px 22px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.15s ease;
+}
+
+.btn-primary:hover:not(:disabled) {
+    background: var(--accent-hover);
+}
+
+.btn-primary:disabled {
+    background: var(--border-light);
+    color: var(--text-faint);
+    cursor: not-allowed;
+}
+
+.btn-secondary {
+    background: transparent;
+    color: var(--text);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius);
+    font-size: 13px;
+    font-weight: 600;
+    padding: 10px 16px;
+    cursor: pointer;
+    width: 100%;
+    transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.btn-secondary:hover {
+    border-color: var(--accent);
+    background: var(--surface-raised);
+}
+
+/* ---------------- Status ---------------- */
+
+.status-section {
+    margin-top: 18px;
+    padding-top: 18px;
+    border-top: 1px solid var(--border);
+}
+
+.status-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.status-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+}
+
+.status-step {
+    font-size: 13px;
+    color: var(--text-dim);
+    margin-top: 2px;
+}
+
+#status-step-label {
+    color: var(--text);
+    font-weight: 500;
+}
+
+.spinner {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    border: 2px solid var(--border-light);
+    border-top-color: var(--accent);
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* ---------------- Error ---------------- */
+
+.error-banner {
+    margin-top: 18px;
+    padding: 14px 16px;
+    background: var(--danger-bg);
+    border: 1px solid var(--danger-border);
+    border-radius: var(--radius);
+}
+
+.error-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--danger);
+    margin-bottom: 4px;
+}
+
+.error-message {
+    font-size: 13px;
+    color: var(--text-dim);
+}
+
+/* ---------------- Clips section ---------------- */
+
+.clips-section {
+    margin-top: 48px;
+}
+
+.clips-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+
+.clips-header h2 {
+    font-size: 18px;
+    font-weight: 700;
+    margin: 0;
+}
+
+.clips-count {
+    font-size: 13px;
+    color: var(--text-dim);
+    font-weight: 500;
+}
+
+/* ---------------- Empty state ---------------- */
+
+.empty-state {
+    border: 1px dashed var(--border-light);
+    border-radius: var(--radius-lg);
+    padding: 56px 24px;
+    text-align: center;
+}
+
+.empty-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 6px;
+}
+
+.empty-subtitle {
+    font-size: 13px;
+    color: var(--text-dim);
+}
+
+/* ---------------- Clip grid ---------------- */
+
+.clip-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+}
+
+@media (max-width: 900px) {
+    .clip-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 560px) {
+    .clip-grid {
+        grid-template-columns: 1fr;
+    }
+    .url-row {
+        flex-direction: column;
+    }
+}
+
+.clip-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.clip-video-wrap {
+    background: #000;
+    aspect-ratio: 9 / 16;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.clip-video-wrap video {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+}
+
+.clip-body {
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.clip-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+    line-height: 1.4;
+}
+
+.clip-duration {
+    font-size: 12px;
+    color: var(--text-dim);
+    font-variant-numeric: tabular-nums;
+}
+
+/* ---------------- Hashtags ---------------- */
+
+.clip-hashtags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.hashtag-chip {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-dim);
+    background: var(--surface-raised);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 4px 10px;
+    white-space: nowrap;
+}
+
+/* ---------------- Publish actions ---------------- */
+
+.clip-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+
+.btn-platform {
+    background: var(--surface-raised);
+    color: var(--text);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius);
+    font-size: 12px;
+    font-weight: 600;
+    padding: 9px 8px;
+    cursor: pointer;
+    transition: border-color 0.15s ease, background 0.15s ease, opacity 0.15s ease;
+}
+
+.btn-platform:hover:not(:disabled) {
+    border-color: var(--accent);
+}
+
+.btn-platform:disabled {
+    cursor: not-allowed;
+}
+
+.btn-platform.published {
+    background: transparent;
+    color: var(--text-faint);
+    border-color: var(--border);
+    opacity: 0.75;
+}
+
+.btn-delete {
+    background: transparent;
+    color: var(--danger);
+    border: 1px solid var(--danger-border);
+    border-radius: var(--radius);
+    font-size: 12px;
+    font-weight: 600;
+    padding: 9px 8px;
+    cursor: pointer;
+    width: 100%;
+    transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.btn-delete:hover:not(:disabled) {
+    background: var(--danger-bg);
+    border-color: var(--danger);
+}
+
+.btn-delete:disabled {
+    color: var(--text-faint);
+    border-color: var(--border);
+    cursor: not-allowed;
+}
+
+/* ---------------- Toast ---------------- */
+
+.toast {
+    position: fixed;
+    left: 50%;
+    bottom: 28px;
+    transform: translateX(-50%) translateY(12px);
+    background: var(--surface-raised);
+    border: 1px solid var(--border-light);
+    color: var(--text);
+    font-size: 13px;
+    font-weight: 500;
+    padding: 12px 18px;
+    border-radius: var(--radius);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    z-index: 100;
+}
+
+.toast.visible {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+    pointer-events: auto;
+}
+
+/* ---------------- Utility ---------------- */
+
+.hidden {
+    display: none !important;
+}

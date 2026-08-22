@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ClipForge</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+<div class="page">
+
+    <header class="app-header">
+        <div class="brand">
+            <span class="brand-logo">ClipForge</span>
+            <span class="brand-subtitle">Turn long videos into short-form content.</span>
+        </div>
+    </header>
+
+    <main class="app-main">
+
+        <section class="process-section">
+            <div class="process-card">
+                <div class="url-row">
+                    <input
+                        id="url-input"
+                        type="text"
+                        class="url-input"
+                        placeholder="Paste a video URL..."
+                        autocomplete="off"
+                        spellcheck="false"
+                    >
+                    <button id="process-btn" class="btn-primary">Process Video</button>
+                </div>
+
+                <div id="error-banner" class="error-banner hidden">
+                    <div class="error-title">Processing failed</div>
+                    <div id="error-message" class="error-message"></div>
+                </div>
+
+                <div id="status-section" class="status-section hidden">
+                    <div class="status-row">
+                        <span class="spinner"></span>
+                        <div class="status-text">
+                            <div class="status-title">Processing video...</div>
+                            <div class="status-step">
+                                Current step:
+                                <span id="status-step-label">Starting...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="clips-section">
+            <div class="clips-header">
+                <h2>Ready to Publish</h2>
+                <span id="clips-count" class="clips-count">0 clips</span>
+            </div>
+
+            <div id="empty-state" class="empty-state hidden">
+                <div class="empty-title">No clips ready yet</div>
+                <div class="empty-subtitle">Paste a video URL above to generate your first clips.</div>
+            </div>
+
+            <div id="clip-grid" class="clip-grid"></div>
+        </section>
+
+    </main>
+
+</div>
+
+<div id="toast" class="toast hidden"></div>
+
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
