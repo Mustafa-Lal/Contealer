@@ -17,6 +17,14 @@
     --danger-bg: #2a1516;
     --danger-border: #4a2224;
 
+    --success: #3ecf8e;
+    --success-bg: #11241b;
+    --success-border: #1f4633;
+
+    --warning: #f0b429;
+    --warning-bg: #2a2212;
+    --warning-border: #4a3b1a;
+
     --radius: 10px;
     --radius-lg: 14px;
 
@@ -53,6 +61,10 @@ body {
     padding: 48px 0 32px;
     border-bottom: 1px solid var(--border);
     margin-bottom: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
 }
 
 .brand {
@@ -432,6 +444,252 @@ body {
     opacity: 1;
     transform: translateX(-50%) translateY(0);
     pointer-events: auto;
+}
+
+/* ---------------- API keys ---------------- */
+
+.btn-header {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--surface);
+    color: var(--text);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius);
+    font-size: 13px;
+    font-weight: 600;
+    padding: 9px 14px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.btn-header:hover,
+.btn-header.active {
+    border-color: var(--accent);
+    background: var(--surface-raised);
+}
+
+.btn-header.needs-attention::before {
+    content: "";
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--warning);
+}
+
+.settings-section {
+    margin-bottom: 40px;
+    padding-bottom: 40px;
+    border-bottom: 1px solid var(--border);
+}
+
+.settings-section .error-banner {
+    margin: 0 0 16px;
+}
+
+.settings-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.settings-header h2 {
+    font-size: 18px;
+    font-weight: 700;
+    margin: 0;
+}
+
+.settings-subtitle {
+    margin: 4px 0 0;
+    font-size: 13px;
+    color: var(--text-dim);
+}
+
+.settings-subtitle code,
+.settings-env-name {
+    font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-dim);
+    background: var(--surface-raised);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 1px 5px;
+}
+
+.settings-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+}
+
+@media (max-width: 760px) {
+    .settings-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.settings-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.settings-card-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.settings-card-title {
+    font-size: 15px;
+    font-weight: 700;
+}
+
+.settings-card-desc {
+    margin: -6px 0 0;
+    font-size: 12.5px;
+    color: var(--text-dim);
+}
+
+.settings-badge {
+    font-size: 11px;
+    font-weight: 600;
+    border: 1px solid;
+    border-radius: 999px;
+    padding: 3px 9px;
+    white-space: nowrap;
+}
+
+.badge-ready {
+    color: var(--success);
+    background: var(--success-bg);
+    border-color: var(--success-border);
+}
+
+.badge-partial {
+    color: var(--warning);
+    background: var(--warning-bg);
+    border-color: var(--warning-border);
+}
+
+.badge-missing {
+    color: var(--text-faint);
+    background: transparent;
+    border-color: var(--border-light);
+}
+
+.settings-warning {
+    font-size: 12px;
+    color: var(--warning);
+    background: var(--warning-bg);
+    border: 1px solid var(--warning-border);
+    border-radius: var(--radius);
+    padding: 8px 10px;
+}
+
+.settings-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.settings-label-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.settings-label {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    font-size: 12.5px;
+    font-weight: 600;
+}
+
+.settings-field-state {
+    font-size: 11px;
+    color: var(--text-faint);
+    white-space: nowrap;
+}
+
+.settings-field-state.is-set {
+    color: var(--success);
+}
+
+.settings-input-row {
+    display: flex;
+    gap: 6px;
+}
+
+.settings-input {
+    flex: 1;
+    min-width: 0;
+    background: var(--surface-raised);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius);
+    color: var(--text);
+    font-size: 13px;
+    padding: 9px 12px;
+    outline: none;
+    transition: border-color 0.15s ease;
+}
+
+.settings-input::placeholder {
+    color: var(--text-faint);
+}
+
+.settings-input:focus {
+    border-color: var(--accent);
+}
+
+.btn-inline {
+    background: transparent;
+    color: var(--text-dim);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius);
+    font-size: 12px;
+    font-weight: 600;
+    padding: 0 10px;
+    cursor: pointer;
+    transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.btn-inline:hover:not(:disabled) {
+    color: var(--text);
+    border-color: var(--accent);
+}
+
+.btn-inline.danger:hover:not(:disabled) {
+    color: var(--danger);
+    border-color: var(--danger);
+}
+
+.btn-inline:disabled {
+    color: var(--text-faint);
+    cursor: not-allowed;
+}
+
+.settings-card-footer {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: auto;
+}
+
+.btn-small {
+    font-size: 13px;
+    padding: 9px 18px;
 }
 
 /* ---------------- Utility ---------------- */

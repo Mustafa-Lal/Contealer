@@ -9,8 +9,10 @@ faster-whisper>=1.0
 groq>=0.9
 
 # --- Uploaders (src/uploaders) ---
-# facebook.py / tiktok.py / instagram.py only need requests + python-dotenv
-# (already listed above). youtube.py additionally needs:
+# facebook.py / tiktok.py only need requests + python-dotenv (already
+# listed above). instagram.py hosts the video on Cloudinary first:
+cloudinary>=1.36
+# youtube.py additionally needs:
 google-auth>=2.29
 google-auth-oauthlib>=1.2
 google-api-python-client>=2.130

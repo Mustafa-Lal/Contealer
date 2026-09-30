@@ -15,9 +15,30 @@
             <span class="brand-logo">ClipForge</span>
             <span class="brand-subtitle">Turn long videos into short-form content.</span>
         </div>
+        <button id="settings-toggle-btn" type="button" class="btn-header" aria-expanded="false">API Keys</button>
     </header>
 
     <main class="app-main">
+
+        <section id="settings-section" class="settings-section hidden">
+            <div class="settings-header">
+                <div>
+                    <h2>API Keys</h2>
+                    <p class="settings-subtitle">
+                        Stored in <code>.env</code> in the project folder and applied immediately.
+                        Saved secrets are never shown again &mdash; leave a field blank to keep its current value.
+                    </p>
+                </div>
+                <button id="settings-close-btn" type="button" class="btn-header">Close</button>
+            </div>
+
+            <div id="settings-error" class="error-banner hidden">
+                <div class="error-title">Something went wrong</div>
+                <div id="settings-error-message" class="error-message"></div>
+            </div>
+
+            <div id="settings-grid" class="settings-grid"></div>
+        </section>
 
         <section class="process-section">
             <div class="process-card">

@@ -1,0 +1,4 @@
+# Secrets -- written by the API Keys panel in the dashboard. Never commit these.
+.env
+client_secret.json
+token.json

@@ -15,6 +15,9 @@ Routes:
     POST   /api/clips/<filename>/publish/<platform> -> publish one clip to one platform
                                                         (facebook | youtube | instagram | tiktok)
     DELETE /api/clips/<filename>                   -> delete a generated vertical clip
+    GET    /api/settings                          -> which API keys are set (secrets masked, never returned in full)
+    POST   /api/settings                          -> save / remove API keys in .env (applied immediately)
+    POST   /api/settings/youtube/client-secret    -> upload YouTube's OAuth client_secret.json
     GET    /media/<file>                            -> serves an individual vertical clip (mp4)
 """
 
@@ -29,6 +32,7 @@ import traceback
 from pathlib import Path
 from urllib.parse import urlparse
 
+from dotenv import dotenv_values, load_dotenv, set_key, unset_key
 from flask import Flask, jsonify, render_template, request, send_from_directory
 
 # ---------------------------------------------------------------------------
@@ -57,29 +61,36 @@ from src.verticalize import verticalize_folder
 # may not be installed yet -- if so, the YouTube publish button simply
 # reports "not available" instead of crashing the whole app.
 PLATFORM_UPLOADERS: dict[str, object] = {}
+# Import error per platform whose uploader failed to load, shown on that
+# platform's card in the API Keys panel (e.g. "No module named 'cloudinary'").
+UPLOADER_IMPORT_ERRORS: dict[str, str] = {}
 
 try:
     from src.uploaders import facebook as _facebook_uploader
     PLATFORM_UPLOADERS["facebook"] = _facebook_uploader
 except ImportError as exc:
+    UPLOADER_IMPORT_ERRORS["facebook"] = str(exc)
     print(f"[app] facebook uploader unavailable: {exc}")
 
 try:
     from src.uploaders import tiktok as _tiktok_uploader
     PLATFORM_UPLOADERS["tiktok"] = _tiktok_uploader
 except ImportError as exc:
+    UPLOADER_IMPORT_ERRORS["tiktok"] = str(exc)
     print(f"[app] tiktok uploader unavailable: {exc}")
 
 try:
     from src.uploaders import instagram as _instagram_uploader
     PLATFORM_UPLOADERS["instagram"] = _instagram_uploader
 except ImportError as exc:
+    UPLOADER_IMPORT_ERRORS["instagram"] = str(exc)
     print(f"[app] instagram uploader unavailable: {exc}")
 
 try:
     from src.uploaders import youtube as _youtube_uploader
     PLATFORM_UPLOADERS["youtube"] = _youtube_uploader
 except ImportError as exc:
+    UPLOADER_IMPORT_ERRORS["youtube"] = str(exc)
     print(f"[app] youtube uploader unavailable: {exc}")
 
 PLATFORM_LABELS = {
@@ -483,6 +494,249 @@ def api_delete_clip(filename):
         _save_publish_state(state)
 
     return jsonify({"success": True, "filename": safe_name})
+
+
+# ---------------------------------------------------------------------------
+# API keys. Every key below is read by an existing src/ module through
+# os.environ at call time (never cached at import), so saving one from the
+# dashboard -- which writes it to .env AND sets it in os.environ -- takes
+# effect immediately, without restarting the server. Secret values are
+# never sent back to the browser in full, only a masked hint.
+# ---------------------------------------------------------------------------
+ENV_FILE = ROOT_DIR / ".env"
+load_dotenv(ENV_FILE)
+
+# youtube.py signs in with an OAuth client file rather than a key. These
+# mirror its own CLIENT_SECRET_FILE / TOKEN_FILE paths.
+YOUTUBE_CLIENT_SECRET_FILE = ROOT_DIR / "client_secret.json"
+YOUTUBE_TOKEN_FILE = ROOT_DIR / "token.json"
+MAX_CLIENT_SECRET_BYTES = 64 * 1024  # real files are well under 1 KB
+
+SETTINGS_GROUPS = [
+    {
+        "id": "groq",
+        "title": "Groq",
+        "description": (
+            "Powers the AI that finds hooks and writes clip titles. Needed to "
+            "process videos. Free key at console.groq.com."
+        ),
+        "keys": [
+            {"name": "GROQ_API_KEY", "label": "API key", "secret": True},
+        ],
+    },
+    {
+        "id": "facebook",
+        "title": "Facebook",
+        "description": (
+            "The Page to post to, plus a long-lived Page access token with "
+            "pages_manage_posts."
+        ),
+        "keys": [
+            {"name": "FACEBOOK_PAGE_ID", "label": "Page ID", "secret": False},
+            {"name": "FACEBOOK_PAGE_ACCESS_TOKEN", "label": "Page access token", "secret": True},
+        ],
+    },
+    {
+        "id": "instagram",
+        "title": "Instagram",
+        "description": (
+            "Business account ID and a token with instagram_content_publish. "
+            "If the token is empty, the Facebook Page token is used. Also needs Cloudinary."
+        ),
+        "keys": [
+            {"name": "INSTAGRAM_BUSINESS_ACCOUNT_ID", "label": "Business account ID", "secret": False},
+            # instagram.py falls back to the Facebook Page token when this is unset.
+            {"name": "INSTAGRAM_ACCESS_TOKEN", "label": "Access token", "secret": True,
+             "fallback": "FACEBOOK_PAGE_ACCESS_TOKEN"},
+        ],
+    },
+    {
+        "id": "cloudinary",
+        "title": "Cloudinary",
+        "description": (
+            "Hosts each video for a moment so Instagram can fetch it. "
+            "Only needed for Instagram."
+        ),
+        "keys": [
+            {"name": "CLOUDINARY_CLOUD_NAME", "label": "Cloud name", "secret": False},
+            {"name": "CLOUDINARY_API_KEY", "label": "API key", "secret": True},
+            {"name": "CLOUDINARY_API_SECRET", "label": "API secret", "secret": True},
+        ],
+    },
+    {
+        "id": "tiktok",
+        "title": "TikTok",
+        "description": (
+            "OAuth access token with the video.publish scope. TikTok tokens "
+            "expire, so paste a fresh one when publishing starts failing."
+        ),
+        "keys": [
+            {"name": "TIKTOK_ACCESS_TOKEN", "label": "Access token", "secret": True},
+        ],
+    },
+]
+
+SETTINGS_KEYS = {key["name"]: key for group in SETTINGS_GROUPS for key in group["keys"]}
+
+_env_lock = threading.Lock()
+
+
+def _mask_secret(value: str) -> str:
+    """Show only the last 4 characters of a secret, and nothing at all for
+    short ones (where 4 characters would give away most of it)."""
+    if len(value) < 12:
+        return "•" * 8
+    return "•" * 8 + value[-4:]
+
+
+def _settings_payload() -> dict:
+    groups = []
+    for group in SETTINGS_GROUPS:
+        keys, satisfied = [], []
+        for key in group["keys"]:
+            value = os.environ.get(key["name"], "")
+            fallback = key.get("fallback")
+            fallback_active = not value and bool(fallback and os.environ.get(fallback))
+            satisfied.append(bool(value) or fallback_active)
+
+            display = ""
+            if value:
+                display = _mask_secret(value) if key["secret"] else value
+
+            keys.append({
+                "name": key["name"],
+                "label": key["label"],
+                "secret": key["secret"],
+                "set": bool(value),
+                "display": display,
+                "fallback": fallback,
+                "fallback_active": fallback_active,
+            })
+
+        if all(satisfied):
+            status = "ready"
+        elif any(k["set"] for k in keys):
+            status = "partial"
+        else:
+            status = "missing"
+
+        groups.append({
+            "id": group["id"],
+            "title": group["title"],
+            "description": group["description"],
+            "status": status,
+            "uploader_error": UPLOADER_IMPORT_ERRORS.get(group["id"]),
+            "keys": keys,
+        })
+
+    return {
+        "groups": groups,
+        "youtube": {
+            "client_secret": YOUTUBE_CLIENT_SECRET_FILE.is_file(),
+            "token": YOUTUBE_TOKEN_FILE.is_file(),
+            "uploader_error": UPLOADER_IMPORT_ERRORS.get("youtube"),
+        },
+    }
+
+
+def _is_same_origin() -> bool:
+    """Reject writes coming from other websites open in the same browser.
+    They can't read this local API, but they can blindly POST a form to it
+    -- and browsers attach an Origin header when they do."""
+    origin = request.headers.get("Origin")
+    return origin is None or origin.rstrip("/") == request.host_url.rstrip("/")
+
+
+@app.route("/api/settings")
+def api_settings():
+    return jsonify(_settings_payload())
+
+
+@app.route("/api/settings", methods=["POST"])
+def api_save_settings():
+    """Save and/or remove API keys in .env. Body:
+        {"values": {"GROQ_API_KEY": "...", ...}, "clear": ["TIKTOK_ACCESS_TOKEN", ...]}
+    Only names listed in SETTINGS_GROUPS are accepted. Blank values are
+    skipped -- the dashboard leaves an input blank to mean "keep it"."""
+    if not _is_same_origin():
+        return jsonify({"success": False, "error": "Cross-origin request rejected."}), 403
+
+    payload = request.get_json(silent=True) or {}
+    values = payload.get("values") or {}
+    clear = payload.get("clear") or []
+
+    if not isinstance(values, dict) or not isinstance(clear, list):
+        return jsonify({"success": False, "error": "Malformed request."}), 400
+
+    unknown = [name for name in [*values, *clear] if name not in SETTINGS_KEYS]
+    if unknown:
+        return jsonify({"success": False, "error": f"Unknown key: {unknown[0]}"}), 400
+
+    to_set = {}
+    for name, value in values.items():
+        value = value.strip() if isinstance(value, str) else ""
+        if not value:
+            continue
+        if "\n" in value or "\r" in value:
+            return jsonify({"success": False, "error": f"{name} can't contain line breaks."}), 400
+        to_set[name] = value
+
+    try:
+        with _env_lock:
+            ENV_FILE.touch(exist_ok=True)
+            for name, value in to_set.items():
+                set_key(ENV_FILE, name, value)
+                os.environ[name] = value
+
+            saved = dotenv_values(ENV_FILE)
+            for name in clear:
+                if name in saved:
+                    unset_key(ENV_FILE, name)
+                os.environ.pop(name, None)
+    except OSError as exc:
+        traceback.print_exc()
+        return jsonify({"success": False, "error": f"Could not write {ENV_FILE.name}: {exc}"}), 500
+
+    return jsonify({"success": True, "settings": _settings_payload()})
+
+
+@app.route("/api/settings/youtube/client-secret", methods=["POST"])
+def api_upload_youtube_client_secret():
+    """Save the Google OAuth client file youtube.py expects at
+    client_secret.json. Signing in to the YouTube account itself still
+    happens in a browser window the first time a clip is published."""
+    if not _is_same_origin():
+        return jsonify({"success": False, "error": "Cross-origin request rejected."}), 403
+
+    uploaded = request.files.get("file")
+    if uploaded is None:
+        return jsonify({"success": False, "error": "No file received."}), 400
+
+    raw = uploaded.read(MAX_CLIENT_SECRET_BYTES + 1)
+    if len(raw) > MAX_CLIENT_SECRET_BYTES:
+        return jsonify({"success": False, "error": "That file is too large to be an OAuth client file."}), 400
+
+    try:
+        data = json.loads(raw)
+    except ValueError:
+        return jsonify({"success": False, "error": "That file isn't valid JSON."}), 400
+
+    if not isinstance(data, dict) or not ({"installed", "web"} & data.keys()):
+        return jsonify({
+            "success": False,
+            "error": (
+                "This doesn't look like a Google OAuth client file. Download it from "
+                "Google Cloud Console > Credentials (OAuth client, type: Desktop app)."
+            ),
+        }), 400
+
+    try:
+        YOUTUBE_CLIENT_SECRET_FILE.write_bytes(raw)
+    except OSError as exc:
+        traceback.print_exc()
+        return jsonify({"success": False, "error": f"Could not save the file: {exc}"}), 500
+
+    return jsonify({"success": True, "settings": _settings_payload()})
 
 
 @app.route("/media/<path:filename>")
